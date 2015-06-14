@@ -364,8 +364,8 @@ namespace Misuzilla.Tools.mdumpfs
 			for (Int32 i = 0; i < prevLimit; i++) 
 			{
 				DateTime prevDate = baseDate.AddDays(~i);
-				String prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyy") + Path.DirectorySeparatorChar + prevDate.ToString("MM") + Path.DirectorySeparatorChar + prevDate.ToString("dd"));
-				//String prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyyMMdd"));
+				//String prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyy") + Path.DirectorySeparatorChar + prevDate.ToString("MM") + Path.DirectorySeparatorChar + prevDate.ToString("dd"));
+				String prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyyMMdd"));
 				if (Directory.Exists(prevDir)) return prevDir;
 			}
 			return "";
@@ -446,9 +446,10 @@ namespace Misuzilla.Tools.mdumpfs
 				return Path.Combine(
 					Path.Combine(
 					_destDir,
-					DateTime.Now.ToString("yyyy") + Path.DirectorySeparatorChar + 
-					DateTime.Now.ToString("MM") + Path.DirectorySeparatorChar + 
-					DateTime.Now.ToString("dd")
+					//DateTime.Now.ToString("yyyy") + Path.DirectorySeparatorChar + 
+					//DateTime.Now.ToString("MM") + Path.DirectorySeparatorChar + 
+					//DateTime.Now.ToString("dd")
+                    DateTime.Now.ToString("yyyyMMdd")
 					), dirName) + Path.DirectorySeparatorChar;
 			}
 		}
