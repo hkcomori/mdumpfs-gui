@@ -461,7 +461,14 @@ namespace Misuzilla.Tools.mdumpfs.Gui
 					statusBar.Text = "ハードリンク \""+fileName+"\" を作成中...";
 					break;
 				case 2:
-					item.Text = "コピー";
+                    if (File.Exists(prevBaseDir + Path.DirectorySeparatorChar + fileName))
+                    {
+                        item.Text = "更新";
+                    }
+                    else
+                    {
+                        item.Text = "新規コピー";
+                    }
 					item.SubItems.Add(srcBaseDir+fileName);
 					item.SubItems.Add(destBaseDir+fileName);
 					statusBar.Text = "コピー \""+fileName+"\" を作成中...";
