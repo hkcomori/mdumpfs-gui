@@ -6,6 +6,8 @@ using System.Windows.Forms;
 using System.Data;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 using Misuzilla.Tools.mdumpfs;
 using Misuzilla.Tools.mdumpfs.Gui.Native;
@@ -43,6 +45,14 @@ namespace Misuzilla.Tools.mdumpfs.Gui
         private System.Windows.Forms.LinkLabel linkTaskSchedule;
         private CheckBox checkOnDateMode;
         private IContainer components;
+        
+        [DllImport("Kernel32.dll")]
+        static extern bool FreeConsole();
+
+        [DllImport("Kernel32.dll")]
+        static extern bool AttachConsole(int processHandle);
+
+        private const int ATTACH_PARENT_PROCESS = -1;
 
 		public MainForm()
 		{
@@ -381,9 +391,11 @@ namespace Misuzilla.Tools.mdumpfs.Gui
 			// 但しウィンドウが出ない。
 			foreach (String arg in args) 
 			{
-				if (arg == "-nogui" || arg == "/nogui") 
+                if (arg == "-nogui" || arg == "--nogui" || arg == "/nogui") 
 				{
+                    AttachConsole(ATTACH_PARENT_PROCESS);
 					Misuzilla.Tools.mdumpfs.ComandLineInterface.Main(args);
+                    FreeConsole();
 					return;
 				}
 			}

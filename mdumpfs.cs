@@ -107,7 +107,7 @@ namespace Misuzilla.Tools.mdumpfs
 					case "-?": case "/?": case "-h": case "--help":
 						ShowUsage();
 						return 0;
-					case "-nogui": case "/nogui":
+					case "-nogui": case "--nogui": case "/nogui":
 						break;
 					default:
 						Console.Error.WriteLine("未知のコマンドラインオプション \"{0}\" は無視されます。", args[i]);
