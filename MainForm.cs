@@ -41,10 +41,8 @@ namespace Misuzilla.Tools.mdumpfs.Gui
 		private System.Windows.Forms.TextBox textExclude;
 		private System.Windows.Forms.StatusBar statusBar;
         private System.Windows.Forms.LinkLabel linkTaskSchedule;
-        /// <summary>
-        /// 必要なデザイナ変数です。
-        /// </summary>
-        private System.ComponentModel.Container components = null;
+        private CheckBox checkOnDateMode;
+        private IContainer components;
 
 		public MainForm()
 		{
@@ -98,13 +96,14 @@ namespace Misuzilla.Tools.mdumpfs.Gui
             this.listViewLog = new System.Windows.Forms.ListView();
             this.status = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.file = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.dest = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.buttonGo = new System.Windows.Forms.Button();
             this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
             this.buttonCheck = new System.Windows.Forms.Button();
             this.errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
             this.labelPrevDir = new System.Windows.Forms.Label();
             this.statusBar = new System.Windows.Forms.StatusBar();
-            this.dest = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.checkOnDateMode = new System.Windows.Forms.CheckBox();
             this.groupSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericLimitDay)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider)).BeginInit();
@@ -178,6 +177,7 @@ namespace Misuzilla.Tools.mdumpfs.Gui
             this.groupSetting.Controls.Add(this.numericLimitDay);
             this.groupSetting.Controls.Add(this.textExclude);
             this.groupSetting.Controls.Add(this.label3);
+            this.groupSetting.Controls.Add(this.checkOnDateMode);
             this.groupSetting.Controls.Add(this.checkOnErrorStop);
             this.groupSetting.Location = new System.Drawing.Point(1, 285);
             this.groupSetting.Name = "groupSetting";
@@ -284,6 +284,11 @@ namespace Misuzilla.Tools.mdumpfs.Gui
             this.file.Text = "ファイル";
             this.file.Width = 256;
             // 
+            // dest
+            // 
+            this.dest.Text = "バックアップ先";
+            this.dest.Width = 256;
+            // 
             // buttonGo
             // 
             this.buttonGo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -327,10 +332,13 @@ namespace Misuzilla.Tools.mdumpfs.Gui
             this.statusBar.Size = new System.Drawing.Size(600, 21);
             this.statusBar.TabIndex = 15;
             // 
-            // dest
+            // checkOnDateMode
             // 
-            this.dest.Text = "バックアップ先";
-            this.dest.Width = 256;
+            this.checkOnDateMode.Location = new System.Drawing.Point(238, 45);
+            this.checkOnDateMode.Name = "checkOnDateMode";
+            this.checkOnDateMode.Size = new System.Drawing.Size(216, 20);
+            this.checkOnDateMode.TabIndex = 0;
+            this.checkOnDateMode.Text = "日付で階層化する(&D)";
             // 
             // MainForm
             // 
@@ -416,6 +424,7 @@ namespace Misuzilla.Tools.mdumpfs.Gui
 			startup.DumpProgress = new DumpProgressHandler(DumpProgressHandled);
 			startup.Error = new ErrorHandler(ErrorHandled);
 			startup.CheckMode = (sender == buttonCheck);
+            startup.DateMode = checkOnDateMode.Checked;
 
 			if (textExclude.Text.Trim() != "") 
 			{
@@ -569,7 +578,7 @@ namespace Misuzilla.Tools.mdumpfs.Gui
 				// ok
 				errorProvider.SetError(comboDestDir, "");
 				labelPrevDir.Text = "前回バックアップ: "+Dumper.GetPreviousSnap(
-					comboDestDir.Text, DateTime.Now, (Int32)numericLimitDay.Value);
+					comboDestDir.Text, DateTime.Now, (Int32)numericLimitDay.Value, (Boolean)checkOnDateMode.Checked);
 				if (errorProvider.GetError(comboBackupDir) == "")
 				{
 					buttonCheck.Enabled = buttonGo.Enabled = true;

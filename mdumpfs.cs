@@ -95,6 +95,9 @@ namespace Misuzilla.Tools.mdumpfs
 							_verbosity = Verbosity.Detail;
 						}
 						break;
+                    case "-d": case "/d":
+                        startup.DateMode = false;
+                        break;
 					case "-s": case "/s": case "-q": case "/q":
 						_verbosity = Verbosity.Silent;
 						break;
@@ -119,7 +122,7 @@ namespace Misuzilla.Tools.mdumpfs
 			{
 				Console.WriteLine("srcDir:\t\t'{0}'\ndestRootDir:\t'{1}'\nbasename:\t'{2}'\nArg:\t\t'{3}'\n", startup.SourceDirectory, startup.DestinationRootDirectory, "", args[0]);
 				Console.WriteLine("prevDir:\t'{0}'\ndestDir:\t'{1}'",
-					Dumper.GetPreviousSnap(startup.DestinationRootDirectory, startup.StartDate, startup.PreviousDateLimit),
+					Dumper.GetPreviousSnap(startup.DestinationRootDirectory, startup.StartDate, startup.PreviousDateLimit, startup.DateMode),
 					startup.DestinationDirectory);
 			}
 
@@ -350,13 +353,13 @@ namespace Misuzilla.Tools.mdumpfs
 			GetPreviousSnap()
 		{
 			String dirName = Path.GetFileName(_startInfo.SourceDirectory.TrimEnd(new Char[] {Path.DirectorySeparatorChar}));
-			String prevDir = GetPreviousSnap(_startInfo.DestinationRootDirectory, _startInfo.StartDate, _startInfo.PreviousDateLimit);
+			String prevDir = GetPreviousSnap(_startInfo.DestinationRootDirectory, _startInfo.StartDate, _startInfo.PreviousDateLimit, _startInfo.DateMode);
 			if (prevDir != "") prevDir = Path.Combine(prevDir, dirName);
 			return prevDir;
 		}
 		
 		public static String
-			GetPreviousSnap(String destRootDir, DateTime baseDate, Int32 prevLimit)
+			GetPreviousSnap(String destRootDir, DateTime baseDate, Int32 prevLimit, Boolean dateMode)
 		{
 			// -1“ú‚Æ‚©
 			if (prevLimit < 1) throw new ArgumentException("‘O‰ñŽÀs“ú‚Ì§ŒÀ‚ª•s³‚Å‚·");
@@ -364,8 +367,14 @@ namespace Misuzilla.Tools.mdumpfs
 			for (Int32 i = 0; i < prevLimit; i++) 
 			{
 				DateTime prevDate = baseDate.AddDays(~i);
-				//String prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyy") + Path.DirectorySeparatorChar + prevDate.ToString("MM") + Path.DirectorySeparatorChar + prevDate.ToString("dd"));
-				String prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyyMMdd"));
+                String prevDir;
+                if (dateMode) {
+                    prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyy") + Path.DirectorySeparatorChar + prevDate.ToString("MM") + Path.DirectorySeparatorChar + prevDate.ToString("dd"));
+                }
+                else
+                {
+                    prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyyMMdd"));
+                }
 				if (Directory.Exists(prevDir)) return prevDir;
 			}
 			return "";
@@ -376,6 +385,7 @@ namespace Misuzilla.Tools.mdumpfs
 	{
 		private String _destDir;
 		private String _srcDir;
+        private Boolean _dateMode = true;
 		private DateTime _startDate = DateTime.Now;
 		private Int32 _prevDateLimit = 31;
 		private Regex _reExclude = null;
@@ -395,6 +405,12 @@ namespace Misuzilla.Tools.mdumpfs
 			_destDir = destBaseDir;
 		}
 		
+        public Boolean
+            DateMode
+        {
+            get { return _dateMode; }
+            set { _dateMode = value; }
+        }
 		public Boolean
 			CheckMode
 		{
@@ -443,13 +459,22 @@ namespace Misuzilla.Tools.mdumpfs
 			get
 			{
 				String dirName = Path.GetFileName(_srcDir.TrimEnd(new Char[] {Path.DirectorySeparatorChar}));
+                String dateName;
+                if (_dateMode)
+                {
+                    dateName = 
+                        DateTime.Now.ToString("yyyy") + Path.DirectorySeparatorChar +
+                        DateTime.Now.ToString("MM") + Path.DirectorySeparatorChar +
+                        DateTime.Now.ToString("dd");
+                }
+                else
+                {
+                    dateName = DateTime.Now.ToString("yyyyMMdd");
+                }
 				return Path.Combine(
 					Path.Combine(
 					_destDir,
-					//DateTime.Now.ToString("yyyy") + Path.DirectorySeparatorChar + 
-					//DateTime.Now.ToString("MM") + Path.DirectorySeparatorChar + 
-					//DateTime.Now.ToString("dd")
-                    DateTime.Now.ToString("yyyyMMdd")
+                    dateName
 					), dirName) + Path.DirectorySeparatorChar;
 			}
 		}
