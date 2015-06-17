@@ -45,14 +45,9 @@ namespace Misuzilla.Tools.mdumpfs.Gui
         private System.Windows.Forms.LinkLabel linkTaskSchedule;
         private CheckBox checkOnDateMode;
         private IContainer components;
-        
+
         [DllImport("Kernel32.dll")]
         static extern bool FreeConsole();
-
-        [DllImport("Kernel32.dll")]
-        static extern bool AttachConsole(int processHandle);
-
-        private const int ATTACH_PARENT_PROCESS = -1;
 
 		public MainForm()
 		{
@@ -387,21 +382,18 @@ namespace Misuzilla.Tools.mdumpfs.Gui
 		[STAThread]
 		static void Main(String[] args) 
 		{
-			// GUI 無しでコマンドライン用と同じように動作する。
-			// 但しウィンドウが出ない。
-			foreach (String arg in args) 
-			{
-                if (arg == "-nogui" || arg == "--nogui" || arg == "/nogui") 
-				{
-                    AttachConsole(ATTACH_PARENT_PROCESS);
-					Misuzilla.Tools.mdumpfs.ComandLineInterface.Main(args);
-                    FreeConsole();
-					return;
-				}
-			}
+            if (args.Length > 0)
+            {
+                // GUI 無しでコマンドライン用と同じように動作する。
+				Misuzilla.Tools.mdumpfs.ComandLineInterface.Main(args);
+            }
+            else
+            {
+                // GUI
+                FreeConsole();
+                Application.Run(new MainForm());
+            }
 
-			// GUI
-			Application.Run(new MainForm());
 		}
 
 		private void buttonBackupDir_Click(object sender, System.EventArgs e)

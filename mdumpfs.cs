@@ -44,16 +44,10 @@ namespace Misuzilla.Tools.mdumpfs
 			StartupInfo startup = new StartupInfo();
 			startup.Error = new ErrorHandler(ErrorHandled);
 			startup.DumpProgress = new DumpProgressHandler(DumpProgressHandled);
-
-			if (args.Length < 2) 
-			{
-				ShowUsage();
-				Console.Error.WriteLine("コマンドライン引数が不足しています。");
-				return 1;
-			}
-
+            
 			// command line params
-			for (Int32 i = 2; i < args.Length; i++) 
+            Int32 i = 0;
+            for (; (i < args.Length) && (args[i][0] == '-'); i++) 
 			{
 				switch (args[i].ToLower()) 
 				{
@@ -63,21 +57,21 @@ namespace Misuzilla.Tools.mdumpfs
 								i++;
 							}
 							break;*/
-					case "-re": case "/re":
+					case "-re":
 						if (i < args.Length - 1) 
 						{
 							startup.Exclude = new Regex(args[i+1]);
 							i++;
 						}
 						break;
-					case "-l": case "/l":
+					case "-l":
 						if (i < args.Length - 1) 
 						{
 							startup.PreviousDateLimit = Int32.Parse(args[i+1]);
 							i++;
 						}
 						break;
-					case "-v": case "/v":
+					case "-v":
 						if (i < args.Length - 1) 
 						{
 							try 
@@ -95,28 +89,38 @@ namespace Misuzilla.Tools.mdumpfs
 							_verbosity = Verbosity.Detail;
 						}
 						break;
-                    case "-d": case "/d":
+                    case "-d":
                         startup.DateMode = false;
                         break;
-					case "-s": case "/s": case "-q": case "/q":
+					case "-s": case "-q":
 						_verbosity = Verbosity.Silent;
 						break;
-					case "-c": case "/c":
+					case "-c":
 						startup.CheckMode = true;
 						break;
-					case "-?": case "/?": case "-h": case "--help":
+					case "-?": case "-h": case "--help":
 						ShowUsage();
 						return 0;
-					case "-nogui": case "--nogui": case "/nogui":
-						break;
 					default:
 						Console.Error.WriteLine("未知のコマンドラインオプション \"{0}\" は無視されます。", args[i]);
 						break;
 				}
 			}
 
-			startup.SourceDirectory = Path.GetFullPath(args[0] + Path.DirectorySeparatorChar);
-			startup.DestinationRootDirectory = Path.GetFullPath(args[1] + Path.DirectorySeparatorChar);
+            if (args.Length-i < 2)
+            {
+                ShowUsage();
+                Console.Error.WriteLine("コマンドライン引数が不足しています。");
+                return 1;
+            }
+
+			startup.SourceDirectory = Path.GetFullPath(args[args.Length-2] + Path.DirectorySeparatorChar);
+			startup.DestinationRootDirectory = Path.GetFullPath(args[args.Length-1] + Path.DirectorySeparatorChar);
+
+            if (!File.Exists(startup.SourceDirectory)) {
+                Console.Error.WriteLine("ディレクトリが見つかりません: \"{0}\"", startup.SourceDirectory);
+                return 1;
+            }
 
 			if (_verbosity == Verbosity.Debug) 
 			{
@@ -160,7 +164,7 @@ namespace Misuzilla.Tools.mdumpfs
 		{
 			Console.Error.WriteLine("ディレクトリのスナップショットを作成します。");
 			Console.Error.WriteLine("");
-			Console.Error.WriteLine("mdumpfs コピー元ディレクトリ コピー先ディレクトリ [-v [0-5]|-s] [-re regex] [-l num]\n");
+            Console.Error.WriteLine("mdumpfs [-v [0-5]|-s] [-re regex] [-l num] コピー元ディレクトリ コピー先ディレクトリ\n");
 			Console.Error.WriteLine("コマンドラインオプション:");
 			Console.Error.WriteLine("  -v [0-5]\tコピー又はハードリンクしたファイルを表示する。");
 			Console.Error.WriteLine("          \t0: 出力しない(-sと同じ)。");
@@ -169,7 +173,8 @@ namespace Misuzilla.Tools.mdumpfs
 			Console.Error.WriteLine("          \t3: ファイル名を表示する。");
 			Console.Error.WriteLine("          \t4: 更新されたファイルのみ表示する。");
 			Console.Error.WriteLine("          \t5: 全ての情報を表示する。");
-			Console.Error.WriteLine("          \t6: デバッグ情報を表示する。");
+            Console.Error.WriteLine("          \t6: デバッグ情報を表示する。");
+            Console.Error.WriteLine("  -d\t\t日付で階層化しない。");
 			Console.Error.WriteLine("  -s\t\t標準出力へ結果を出力をしない。");
 			Console.Error.WriteLine("  -c\t\tチェックのみでバックアップを行わない。");
 			Console.Error.WriteLine("  -re <regex>\t正規表現にマッチするディレクトリ/ファイルを対象外にする。");
