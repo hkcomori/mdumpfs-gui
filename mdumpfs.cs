@@ -38,12 +38,15 @@ namespace Misuzilla.Tools.mdumpfs
 	public class ComandLineInterface
 	{
 		private static Verbosity _verbosity = Verbosity.DirectoryOnly;
+        private static LogWriter _logFile;
 		public static Int32
 			Main(String[] args)
 		{
 			StartupInfo startup = new StartupInfo();
 			startup.Error = new ErrorHandler(ErrorHandled);
 			startup.DumpProgress = new DumpProgressHandler(DumpProgressHandled);
+            _logFile = new LogWriter();
+            _logFile.Enable = false;
             
 			// command line params
             Int32 i = 0;
@@ -71,6 +74,11 @@ namespace Misuzilla.Tools.mdumpfs
 							i++;
 						}
 						break;
+                    case "--log-file":
+                        _logFile.LogFile = args[i + 1];
+                        _logFile.Enable = true;
+                        i++;
+                        break;
 					case "-v":
 						if (i < args.Length - 1) 
 						{
@@ -117,7 +125,7 @@ namespace Misuzilla.Tools.mdumpfs
 			startup.SourceDirectory = Path.GetFullPath(args[args.Length-2] + Path.DirectorySeparatorChar);
 			startup.DestinationRootDirectory = Path.GetFullPath(args[args.Length-1] + Path.DirectorySeparatorChar);
 
-            if (!File.Exists(startup.SourceDirectory)) {
+            if (!Directory.Exists(startup.SourceDirectory)) {
                 Console.Error.WriteLine("ディレクトリが見つかりません: \"{0}\"", startup.SourceDirectory);
                 return 1;
             }
@@ -164,21 +172,22 @@ namespace Misuzilla.Tools.mdumpfs
 		{
 			Console.Error.WriteLine("ディレクトリのスナップショットを作成します。");
 			Console.Error.WriteLine("");
-            Console.Error.WriteLine("mdumpfs [-v [0-5]|-s] [-re regex] [-l num] コピー元ディレクトリ コピー先ディレクトリ\n");
+            Console.Error.WriteLine("mdumpfs [-v [0-5]|-s] [-re regex] [-l num] [--log-file file] コピー元ディレクトリ コピー先ディレクトリ\n");
 			Console.Error.WriteLine("コマンドラインオプション:");
-			Console.Error.WriteLine("  -v [0-5]\tコピー又はハードリンクしたファイルを表示する。");
-			Console.Error.WriteLine("          \t0: 出力しない(-sと同じ)。");
-			Console.Error.WriteLine("          \t1: 走査したディレクトリ名のみ表示。");
-			Console.Error.WriteLine("          \t2: 1 に加えファイルを「.(ドット)」で表示する。");
-			Console.Error.WriteLine("          \t3: ファイル名を表示する。");
-			Console.Error.WriteLine("          \t4: 更新されたファイルのみ表示する。");
-			Console.Error.WriteLine("          \t5: 全ての情報を表示する。");
-            Console.Error.WriteLine("          \t6: デバッグ情報を表示する。");
-            Console.Error.WriteLine("  -d\t\t日付で階層化しない。");
-			Console.Error.WriteLine("  -s\t\t標準出力へ結果を出力をしない。");
-			Console.Error.WriteLine("  -c\t\tチェックのみでバックアップを行わない。");
-			Console.Error.WriteLine("  -re <regex>\t正規表現にマッチするディレクトリ/ファイルを対象外にする。");
-			Console.Error.WriteLine("  -l <num>\t前回のスナップショットを探す日数(未指定時、31日)。");
+			Console.Error.WriteLine("  -v [0-5]\t\tコピー又はハードリンクしたファイルを表示する。");
+			Console.Error.WriteLine("          \t\t0: 出力しない(-sと同じ)。");
+			Console.Error.WriteLine("          \t\t1: 走査したディレクトリ名のみ表示。");
+			Console.Error.WriteLine("          \t\t2: 1 に加えファイルを「.(ドット)」で表示する。");
+			Console.Error.WriteLine("          \t\t3: ファイル名を表示する。");
+			Console.Error.WriteLine("          \t\t4: 更新されたファイルのみ表示する。");
+			Console.Error.WriteLine("          \t\t5: 全ての情報を表示する。");
+            Console.Error.WriteLine("          \t\t6: デバッグ情報を表示する。");
+            Console.Error.WriteLine("  -d\t\t\t日付で階層化しない。");
+			Console.Error.WriteLine("  -s\t\t\t標準出力へ結果を出力をしない。");
+			Console.Error.WriteLine("  -c\t\t\tチェックのみでバックアップを行わない。");
+            Console.Error.WriteLine("  -re <regex>\t\t正規表現にマッチするディレクトリ/ファイルを対象外にする。");
+            Console.Error.WriteLine("  --log-file <file>\tログをファイルに出力する。");
+			Console.Error.WriteLine("  -l <num>\t\t前回のスナップショットを探す日数(未指定時、31日)。");
 			Console.Error.WriteLine("");
 			Console.Error.WriteLine("前回(過去31日以内)のスナップショットと比較し更新されたファイルをコピーします。");
 			Console.Error.WriteLine("更新されていないファイルは前回のスナップショットのファイルへのハードリンクとして保存されます。\n");
@@ -203,33 +212,43 @@ namespace Misuzilla.Tools.mdumpfs
 				{
 					case Verbosity.UpdateOnly: break;
 					case Verbosity.DirectoryAndFileCount:
-						Console.Write("\n{0}", srcBaseDir); break;
+						Console.Write("\n{0}", srcBaseDir);
+                        break;
 					default:
-						Console.WriteLine("{0}", srcBaseDir); break;
+						Console.WriteLine("{0}", srcBaseDir);
+                        break;
 				}
 					break;
-				case 1: // hardlink
-				switch (_verbosity) 
-				{
-					case Verbosity.Detail:
-						Console.WriteLine("Hardlink: {0} -> {1}", prevFileName, destFileName); break;
-					case Verbosity.FileName:
-						Console.WriteLine("{0}", prevFileName); break;
-					case Verbosity.DirectoryAndFileCount:
-						Console.Write("."); break;
-				}
+                case 1: // hardlink
+                    _logFile.WriteLine(String.Format("Hardlink: {0} -> {1}", prevFileName, destFileName));
+				    switch (_verbosity) 
+				    {
+					    case Verbosity.Detail:
+						    Console.WriteLine("Hardlink: {0} -> {1}", prevFileName, destFileName);
+                            break;
+					    case Verbosity.FileName:
+						    Console.WriteLine("{0}", prevFileName);
+                            break;
+					    case Verbosity.DirectoryAndFileCount:
+						    Console.Write(".");
+                            break;
+				    }
 					break;
 				case 2: // copy
-				switch (_verbosity) 
-				{
-					case Verbosity.Detail:
-						Console.WriteLine("Copy: {0} -> {1}", srcFileName, destFileName); break;
-					case Verbosity.FileName:
-					case Verbosity.UpdateOnly:
-						Console.WriteLine("{0}", srcFileName); break;
-					case Verbosity.DirectoryAndFileCount:
-						Console.Write("."); break;
-				}
+                    _logFile.WriteLine(String.Format("Copy: {0} -> {1}", srcFileName, destFileName));
+				    switch (_verbosity) 
+				    {
+					    case Verbosity.Detail:
+						    Console.WriteLine("Copy: {0} -> {1}", srcFileName, destFileName);
+                            break;
+					    case Verbosity.FileName:
+					    case Verbosity.UpdateOnly:
+						    Console.WriteLine("{0}", srcFileName);
+                            break;
+					    case Verbosity.DirectoryAndFileCount:
+						    Console.Write(".");
+                            break;
+				    }
 					break;
 			}
 		}
@@ -386,6 +405,38 @@ namespace Misuzilla.Tools.mdumpfs
 		}
 	}
 	
+    public class LogWriter
+    {
+        private String _logFile;
+        private Boolean _enable;
+
+        public String
+            LogFile
+        {
+            set { _logFile = value; }
+            get { return _logFile; }
+        }
+
+        public Boolean
+            Enable
+        {
+            set { _enable = value; }
+            get { return _enable; }
+        }
+
+        public void
+            WriteLine(String str)
+        {
+            if (_enable)
+            {
+                using (StreamWriter w = new StreamWriter(_logFile, true, System.Text.Encoding.Default))
+                {
+                    w.WriteLine(DateTime.Now.ToString("[yyyy/MM/dd(ddd) HH:mm:ss]: ") + str);
+                }
+            }
+        }
+    }
+
 	public class StartupInfo
 	{
 		private String _destDir;
