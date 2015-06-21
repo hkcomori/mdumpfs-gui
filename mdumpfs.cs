@@ -292,12 +292,17 @@ namespace Misuzilla.Tools.mdumpfs
 			CopyInternal(String srcBaseDir, String destBaseDir, String prevBaseDir)
 		{
 			FileInfo[] files;
+            DirectoryInfo srcDirInfo, destDirInfo;
 			OnDumpProgress(0, "", srcBaseDir, destBaseDir, prevBaseDir);
 
 			try 
 			{
-				if (!_startInfo.CheckMode) Directory.CreateDirectory(destBaseDir);
-				files = new DirectoryInfo(srcBaseDir).GetFiles();
+                srcDirInfo = new DirectoryInfo(srcBaseDir);
+                if (!_startInfo.CheckMode)
+                {
+                    Directory.CreateDirectory(destBaseDir);
+                }
+				files = srcDirInfo.GetFiles();
 			} 
 			catch (SystemException e) 
 			{
@@ -348,14 +353,27 @@ namespace Misuzilla.Tools.mdumpfs
 			{
 				String dirName = Path.GetFileName(dir);
 				if (_startInfo.Exclude != null && _startInfo.Exclude.IsMatch(dir+Path.DirectorySeparatorChar)) continue;
-				
-				if (!CopyInternal(
-					Path.Combine(srcBaseDir, dirName + Path.DirectorySeparatorChar), 
-					Path.Combine(destBaseDir, dirName + Path.DirectorySeparatorChar), 
-					(prevBaseDir != "") ? Path.Combine(prevBaseDir, dirName) : ""
-					)) return false;
+
+                if (!CopyInternal(
+                    Path.Combine(srcBaseDir, dirName + Path.DirectorySeparatorChar),
+                    Path.Combine(destBaseDir, dirName + Path.DirectorySeparatorChar),
+                    (prevBaseDir != "") ? Path.Combine(prevBaseDir, dirName) : ""
+                    ))
+                {
+                    return false;
+                }
 			}
-			
+
+            if (!_startInfo.CheckMode)
+            {
+                // copy timestamp
+                destDirInfo = new DirectoryInfo(destBaseDir);
+                destDirInfo.Attributes = srcDirInfo.Attributes;
+                destDirInfo.CreationTime = srcDirInfo.CreationTime;
+                destDirInfo.LastAccessTime = srcDirInfo.LastAccessTime;
+                destDirInfo.LastWriteTime = srcDirInfo.LastWriteTime;
+            }
+
 			return true;
 		}
 		
