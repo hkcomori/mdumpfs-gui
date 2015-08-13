@@ -208,8 +208,8 @@ namespace Misuzilla.Tools.mdumpfs
 			switch (action) 
 			{
 				case 0: // found
-				switch (_verbosity) 
-				{
+	    			switch (_verbosity) 
+		    		{
 					case Verbosity.UpdateOnly: break;
 					case Verbosity.DirectoryAndFileCount:
 						Console.Write("\n{0}", srcBaseDir);
@@ -217,7 +217,7 @@ namespace Misuzilla.Tools.mdumpfs
 					default:
 						Console.WriteLine("{0}", srcBaseDir);
                         break;
-				}
+			    	}
 					break;
                 case 1: // hardlink
                     _logFile.WriteLine(String.Format("Hardlink: {0} -> {1}", prevFileName, destFileName));
@@ -408,7 +408,7 @@ namespace Misuzilla.Tools.mdumpfs
 
 			for (Int32 i = 0; i < prevLimit; i++) 
 			{
-				DateTime prevDate = baseDate.AddDays(~i);
+				DateTime prevDate = baseDate.AddDays(-i);
                 String prevDir;
                 if (dateMode) {
                     prevDir = Path.Combine(destRootDir, prevDate.ToString("yyyy") + Path.DirectorySeparatorChar + prevDate.ToString("MM") + Path.DirectorySeparatorChar + prevDate.ToString("dd"));
